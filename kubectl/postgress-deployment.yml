@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: short-app-postgres-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      components: database
+  template:
+    metadata:
+      labels:
+        components: database
+    spec:
+      containers:
+      - name: short-app-postgres
+        image: postgres:16.0
+        ports:
+        - containerPort: 5432
+        env:
+        - name: POSTGRES_DB
+          valueFrom:
+            secretKeyRef:
+              name: short-app-postgres-secret
+              key: POSTGRES_DB
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: short-app-postgres-secret
+              key: POSTGRES_USER
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: short-app-postgres-secret
+              key: POSTGRES_PASSWORD
+        resources:
+          limits:
+            memory: "500Mi"
+            cpu: "300m"
+        volumeMounts:
+        - name: short-app-postgres-data
+          mountPath: /var/lib/postgresql/data
+          subPath: postgres
+      volumes:
+      - name: short-app-postgres-data
+        persistentVolumeClaim:
+          claimName: short-app-postgres-pvc
